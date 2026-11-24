@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleek Glassmorphic Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Ambient Glow Background */
+        body {
+            background: #0f172a;
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.25) 0px, transparent 50%),
+                radial-gradient(at 90% 10%, rgba(168, 85, 247, 0.2) 0px, transparent 50%),
+                radial-gradient(at 50% 90%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(8px);
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .glass-button:active, .glass-button.active-key {
+            transform: translateY(1px) scale(0.97);
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom Accent Buttons */
+        .btn-operator {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+        }
+        .btn-operator:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #a5b4fc;
+        }
+
+        .btn-action {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+        .btn-action:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .btn-equals {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn-equals:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* Scrollbar styling for history */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 text-slate-100">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-md relative">
+        
+        <!-- Calculator Glass Frame -->
+        <div class="glass-card rounded-3xl p-6 relative overflow-hidden">
+            
+            <!-- Header Controls -->
+            <div class="flex items-center justify-between mb-4 px-1">
+                <div class="flex items-center space-x-2">
+                    <span class="inline-block w-3 h-3 rounded-full bg-red-500/80"></span>
+                    <span class="inline-block w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                    <span class="inline-block w-3 h-3 rounded-full bg-green-500/80"></span>
+                </div>
+                
+                <!-- Stylish Brand Title -->
+                <div class="text-xs font-bold tracking-widest uppercase bg-gradient-to-r from-indigo-400 via-pink-400 to-purple-400 bg-clip-text text-transparent drop-shadow-sm px-2.5 py-0.5 rounded-full bg-slate-800/50 border border-slate-700/40 shadow-inner">
+                    Mahmud Nice
+                </div>
+                
+                <div class="flex items-center space-x-3 text-slate-400">
+                    <!-- Sound Toggle Button -->
+                    <button id="soundToggle" class="hover:text-slate-200 transition-colors p-1" title="Toggle Key Sound">
+                        <i id="soundIcon" class="fas fa-volume-up text-xs"></i>
+                    </button>
+                    
+                    <!-- History Toggle Button -->
+                    <button id="historyToggle" class="hover:text-slate-200 transition-colors p-1 relative" title="Calculation History">
+                        <i class="fas fa-history text-xs"></i>
+                        <span id="historyBadge" class="hidden absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full"></span>
+                    </button>
+
+                    <!-- Keyboard Guide Tooltip Trigger -->
+                    <button id="keyboardInfo" class="hover:text-slate-200 transition-colors p-1" title="Keyboard Shortcuts">
+                        <i class="fas fa-keyboard text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Display Area -->
+            <div class="bg-slate-900/60 rounded-2xl p-4 mb-5 border border-slate-700/50 flex flex-col justify-end min-h-[120px] text-right shadow-inner">
+                <!-- Expression / History line -->
+                <div id="expressionDisplay" class="text-slate-400 text-sm font-mono h-6 overflow-x-auto whitespace-nowrap custom-scrollbar mb-1">
+                    <!-- Dynamic expression will appear here -->
+                </div>
+                
+                <!-- Main Value Input/Output -->
+                <div class="flex items-center justify-between">
+                    <button id="copyBtn" class="text-slate-500 hover:text-indigo-400 transition-colors text-xs p-1 opacity-0 hover:opacity-100" title="Copy to clipboard">
+                        <i class="far fa-copy"></i>
+                    </button>
+                    <div id="mainDisplay" class="text-3xl sm:text-4xl font-bold font-mono text-white tracking-wider overflow-x-auto whitespace-nowrap custom-scrollbar py-1">
+                        0
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keypad Grid -->
+            <div class="grid grid-cols-4 gap-3">
+                <!-- Row 1 -->
+                <button data-action="clear" class="glass-button btn-action font-semibold text-lg py-4 rounded-2xl flex items-center justify-center">
+                    AC
+                </button>
+                <button data-action="delete" class="glass-button btn-operator font-semibold text-lg py-4 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-backspace"></i>
+                </button>
+                <button data-action="percent" class="glass-button btn-operator font-semibold text-lg py-4 rounded-2xl flex items-center justify-center">
+                    %
+                </button>
+                <button data-operator="/" class="glass-button btn-operator font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    ÷
+                </button>
+
+                <!-- Row 2 -->
+                <button data-number="7" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    7
+                </button>
+                <button data-number="8" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    8
+                </button>
+                <button data-number="9" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    9
+                </button>
+                <button data-operator="*" class="glass-button btn-operator font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    ×
+                </button>
+
+                <!-- Row 3 -->
+                <button data-number="4" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    4
+                </button>
+                <button data-number="5" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    5
+                </button>
+                <button data-number="6" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    6
+                </button>
+                <button data-operator="-" class="glass-button btn-operator font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    −
+                </button>
+
+                <!-- Row 4 -->
+                <button data-number="1" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    1
+                </button>
+                <button data-number="2" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    2
+                </button>
+                <button data-number="3" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    3
+                </button>
+                <button data-operator="+" class="glass-button btn-operator font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    +
+                </button>
+
+                <!-- Row 5 -->
+                <button data-action="negate" class="glass-button text-slate-300 font-semibold text-lg py-4 rounded-2xl flex items-center justify-center">
+                    ⁺/₋
+                </button>
+                <button data-number="0" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    0
+                </button>
+                <button data-action="decimal" class="glass-button text-slate-200 font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    .
+                </button>
+                <button data-action="calculate" class="glass-button btn-equals font-semibold text-xl py-4 rounded-2xl flex items-center justify-center">
+                    =
+                </button>
+            </div>
+
+            <!-- Toast / Copy Alert Popup -->
+            <div id="toast" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-full shadow-lg opacity-0 transition-all duration-300 pointer-events-none">
+                Copied to clipboard!
+            </div>
+        </div>
+
+        <!-- Sliding History Panel Overlay -->
+        <div id="historyDrawer" class="glass-card absolute inset-0 rounded-3xl p-5 flex flex-col z-20 translate-y-full opacity-0 pointer-events-none transition-all duration-300 ease-out">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700/60 mb-3">
+                <div class="flex items-center space-x-2 text-indigo-400 font-semibold">
+                    <i class="fas fa-history text-sm"></i>
+                    <span>Calculation History</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="clearHistoryBtn" class="text-xs text-slate-400 hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-slate-800">
+                        Clear All
+                    </button>
+                    <button id="closeHistoryBtn" class="text-slate-400 hover:text-white p-1">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar text-right">
+                <!-- History Items will be dynamically added here -->
+                <div id="emptyHistory" class="text-center text-slate-500 my-auto py-12 text-sm">
+                    No history recorded yet
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Modal Overlay -->
+        <div id="keyboardModal" class="glass-card absolute inset-0 rounded-3xl p-5 flex flex-col z-30 opacity-0 pointer-events-none transition-all duration-300">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700/60 mb-3">
+                <span class="text-indigo-400 font-semibold text-sm flex items-center gap-2">
+                    <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                </span>
+                <button id="closeKeyboardModal" class="text-slate-400 hover:text-white p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 text-xs text-slate-300">
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Numbers 0-9</span>
+                    <span class="font-mono text-indigo-300">0 - 9</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Operators</span>
+                    <span class="font-mono text-indigo-300">+ , - , * , /</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Calculate</span>
+                    <span class="font-mono text-indigo-300">Enter or =</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Delete character</span>
+                    <span class="font-mono text-indigo-300">Backspace</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Clear all</span>
+                    <span class="font-mono text-indigo-300">Escape or C</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-800">
+                    <span class="text-slate-400">Percentage</span>
+                    <span class="font-mono text-indigo-300">%</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Calculator State
+            let currentInput = '0';
+            let previousInput = '';
+            let activeOperator = null;
+            let shouldResetDisplay = false;
+            let history = [];
+            let soundEnabled = true;
+
+            // DOM Element References
+            const mainDisplay = document.getElementById('mainDisplay');
+            const expressionDisplay = document.getElementById('expressionDisplay');
+            const historyDrawer = document.getElementById('historyDrawer');
+            const historyList = document.getElementById('historyList');
+            const emptyHistory = document.getElementById('emptyHistory');
+            const historyBadge = document.getElementById('historyBadge');
+            const keyboardModal = document.getElementById('keyboardModal');
+            const soundToggle = document.getElementById('soundToggle');
+            const soundIcon = document.getElementById('soundIcon');
+            const copyBtn = document.getElementById('copyBtn');
+            const toast = document.getElementById('toast');
+
+            // Web Audio API Synth Tone generator for key press feedback
+            const playAudioTone = (freq = 440, type = 'sine') => {
+                if (!soundEnabled) return;
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                } catch (e) {
+                    // Audio context fallback silent fail
+                }
+            };
+
+            // Format numbers for crisp layout & readability
+            const formatNumber = (numStr) => {
+                if (numStr === '' || numStr === 'Error') return numStr;
+                const [integerPart, decimalPart] = numStr.split('.');
+                const formattedInteger = parseFloat(integerPart).toLocaleString('en-US', {
+                    maximumFractionDigits: 0
+                });
+                if (isNaN(parseFloat(integerPart))) return numStr;
+                return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+            };
+
+            // Update Main Screen Displays
+            const updateDisplay = () => {
+                mainDisplay.textContent = formatNumber(currentInput);
+                
+                // Dynamic font size adjustment to prevent overflow
+                const length = currentInput.length;
+                if (length > 13) {
+                    mainDisplay.className = "text-xl sm:text-2xl font-bold font-mono text-white tracking-wider overflow-x-auto whitespace-nowrap custom-scrollbar py-1";
+                } else if (length > 9) {
+                    mainDisplay.className = "text-2xl sm:text-3xl font-bold font-mono text-white tracking-wider overflow-x-auto whitespace-nowrap custom-scrollbar py-1";
+                } else {
+                    mainDisplay.className = "text-3xl sm:text-4xl font-bold font-mono text-white tracking-wider overflow-x-auto whitespace-nowrap custom-scrollbar py-1";
+                }
+
+                // Show/hide copy button
+                if (currentInput !== '0' && currentInput !== 'Error') {
+                    copyBtn.classList.remove('opacity-0');
+                } else {
+                    copyBtn.classList.add('opacity-0');
+                }
+            };
+
+            // Handle Number Input
+            const appendNumber = (number) => {
+                playAudioTone(520, 'sine');
+                if (currentInput === '0' || shouldResetDisplay) {
+                    currentInput = number;
+                    shouldResetDisplay = false;
+                } else {
+                    if (currentInput.replace('.', '').length < 15) { // Limit length
+                        currentInput += number;
+                    }
+                }
+                updateDisplay();
+            };
+
+            // Handle Operator Input
+            const setOperator = (op) => {
+                playAudioTone(640, 'triangle');
+                if (currentInput === 'Error') return;
+
+                if (activeOperator && !shouldResetDisplay) {
+                    calculateResult();
+                }
+                
+                previousInput = currentInput;
+                activeOperator = op;
+                shouldResetDisplay = true;
+
+                const symbolMap = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+                expressionDisplay.textContent = `${formatNumber(previousInput)} ${symbolMap[op] || op}`;
+            };
+
+            // Handle Decimal Point
+            const appendDecimal = () => {
+                playAudioTone(480, 'sine');
+                if (shouldResetDisplay) {
+                    currentInput = '0.';
+                    shouldResetDisplay = false;
+                } else if (!currentInput.includes('.')) {
+                    currentInput += '.';
+                }
+                updateDisplay();
+            };
+
+            // Handle Calculation Result
+            const calculateResult = () => {
+                playAudioTone(800, 'sine');
+                if (!activeOperator || shouldResetDisplay) return;
+
+                const prev = parseFloat(previousInput);
+                const current = parseFloat(currentInput);
+
+                if (isNaN(prev) || isNaN(current)) return;
+
+                let result = 0;
+                const symbolMap = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+                const exprString = `${formatNumber(previousInput)} ${symbolMap[activeOperator]} ${formatNumber(currentInput)}`;
+
+                switch (activeOperator) {
+                    case '+':
+                        result = prev + current;
+                        break;
+                    case '-':
+                        result = prev - current;
+                        break;
+                    case '*':
+                        result = prev * current;
+                        break;
+                    case '/':
+                        if (current === 0) {
+                            currentInput = 'Error';
+                            expressionDisplay.textContent = 'Cannot divide by zero';
+                            activeOperator = null;
+                            shouldResetDisplay = true;
+                            updateDisplay();
+                            return;
+                        }
+                        result = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+
+                // Handle precision issues with JS floats
+                result = Math.round(result * 1e10) / 1e10;
+                
+                currentInput = result.toString();
+                expressionDisplay.textContent = `${exprString} =`;
+                
+                // Add to history
+                addHistoryItem(exprString, currentInput);
+
+                activeOperator = null;
+                shouldResetDisplay = true;
+                updateDisplay();
+            };
+
+            // Handle Clear (AC)
+            const clearAll = () => {
+                playAudioTone(350, 'sawtooth');
+                currentInput = '0';
+                previousInput = '';
+                activeOperator = null;
+                shouldResetDisplay = false;
+                expressionDisplay.textContent = '';
+                updateDisplay();
+            };
+
+            // Handle Backspace / Delete
+            const deleteLastDigit = () => {
+                playAudioTone(400, 'sine');
+                if (shouldResetDisplay) return;
+                
+                if (currentInput.length === 1 || currentInput === 'Error') {
+                    currentInput = '0';
+                } else {
+                    currentInput = currentInput.slice(0, -1);
+                }
+                updateDisplay();
+            };
+
+            // Handle Percentage calculation
+            const applyPercentage = () => {
+                playAudioTone(600, 'sine');
+                if (currentInput === 'Error') return;
+                
+                const val = parseFloat(currentInput);
+                if (!isNaN(val)) {
+                    currentInput = (val / 100).toString();
+                    updateDisplay();
+                }
+            };
+
+            // Toggle Plus/Minus Sign
+            const toggleSign = () => {
+                playAudioTone(500, 'sine');
+                if (currentInput === '0' || currentInput === 'Error') return;
+                currentInput = (parseFloat(currentInput) * -1).toString();
+                updateDisplay();
+            };
+
+            // History Management
+            const addHistoryItem = (expr, res) => {
+                history.unshift({ expr, res });
+                historyBadge.classList.remove('hidden');
+                renderHistory();
+            };
+
+            const renderHistory = () => {
+                if (history.length === 0) {
+                    emptyHistory.style.display = 'block';
+                    historyList.innerHTML = '';
+                    historyList.appendChild(emptyHistory);
+                    return;
+                }
+
+                emptyHistory.style.display = 'none';
+                historyList.innerHTML = history.map((item, idx) => `
+                    <div data-index="${idx}" class="history-item p-3 rounded-xl bg-slate-800/60 border border-slate-700/40 hover:bg-slate-700/50 cursor-pointer transition-colors group">
+                        <div class="text-xs text-slate-400 group-hover:text-slate-300 font-mono">${item.expr}</div>
+                        <div class="text-base font-bold text-indigo-400 group-hover:text-indigo-300 font-mono mt-0.5">= ${formatNumber(item.res)}</div>
+                    </div>
+                `).join('');
+
+                // Click history item to recall value
+                document.querySelectorAll('.history-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const idx = el.getAttribute('data-index');
+                        currentInput = history[idx].res;
+                        updateDisplay();
+                        closeDrawer();
+                    });
+                });
+            };
+
+            // UI Overlay Handlers
+            const openDrawer = () => {
+                historyDrawer.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            };
+            const closeDrawer = () => {
+                historyDrawer.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            };
+
+            document.getElementById('historyToggle').addEventListener('click', openDrawer);
+            document.getElementById('closeHistoryBtn').addEventListener('click', closeDrawer);
+
+            document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+                history = [];
+                historyBadge.classList.add('hidden');
+                renderHistory();
+            });
+
+            document.getElementById('keyboardInfo').addEventListener('click', () => {
+                keyboardModal.classList.remove('opacity-0', 'pointer-events-none');
+            });
+            document.getElementById('closeKeyboardModal').addEventListener('click', () => {
+                keyboardModal.classList.add('opacity-0', 'pointer-events-none');
+            });
+
+            // Sound Toggle Handler
+            soundToggle.addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) {
+                    soundIcon.className = 'fas fa-volume-up text-xs text-indigo-400';
+                } else {
+                    soundIcon.className = 'fas fa-volume-mute text-xs text-slate-500';
+                }
+            });
+
+            // Clipboard Copy Feature
+            copyBtn.addEventListener('click', () => {
+                const textToCopy = currentInput;
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = textToCopy;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    toast.classList.remove('opacity-0');
+                    setTimeout(() => toast.classList.add('opacity-0'), 1800);
+                } catch (err) {
+                    // Fallback fails silently
+                }
+                document.body.removeChild(tempTextArea);
+            });
+
+            // Click Event Listener for Calculator Buttons
+            document.querySelectorAll('button[data-number]').forEach(btn => {
+                btn.addEventListener('click', () => appendNumber(btn.dataset.number));
+            });
+
+            document.querySelectorAll('button[data-operator]').forEach(btn => {
+                btn.addEventListener('click', () => setOperator(btn.dataset.operator));
+            });
+
+            document.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.dataset.action;
+                    switch (action) {
+                        case 'clear': clearAll(); break;
+                        case 'delete': deleteLastDigit(); break;
+                        case 'decimal': appendDecimal(); break;
+                        case 'calculate': calculateResult(); break;
+                        case 'percent': applyPercentage(); break;
+                        case 'negate': toggleSign(); break;
+                    }
+                });
+            });
+
+            // Physical Keyboard Support & Visual Feedback
+            document.addEventListener('keydown', (e) => {
+                // Prevent scrolling on space / enter / arrow keys
+                if (['Space', 'Enter', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+                    e.preventDefault();
+                }
+
+                const key = e.key;
+
+                // Match Key to UI Button for Visual Active Class
+                let selector = '';
+                if (!isNaN(key) && key !== ' ') {
+                    appendNumber(key);
+                    selector = `button[data-number="${key}"]`;
+                } else if (key === '+') {
+                    setOperator('+');
+                    selector = `button[data-operator="+"]`;
+                } else if (key === '-') {
+                    setOperator('-');
+                    selector = `button[data-operator="-"]`;
+                } else if (key === '*') {
+                    setOperator('*');
+                    selector = `button[data-operator="*"]`;
+                } else if (key === '/') {
+                    setOperator('/');
+                    selector = `button[data-operator="/"]`;
+                } else if (key === 'Enter' || key === '=') {
+                    calculateResult();
+                    selector = `button[data-action="calculate"]`;
+                } else if (key === 'Backspace') {
+                    deleteLastDigit();
+                    selector = `button[data-action="delete"]`;
+                } else if (key === 'Escape' || key.toLowerCase() === 'c') {
+                    clearAll();
+                    selector = `button[data-action="clear"]`;
+                } else if (key === '.') {
+                    appendDecimal();
+                    selector = `button[data-action="decimal"]`;
+                } else if (key === '%') {
+                    applyPercentage();
+                    selector = `button[data-action="percent"]`;
+                }
+
+                // Apply temporary active class to matching button
+                if (selector) {
+                    const targetBtn = document.querySelector(selector);
+                    if (targetBtn) {
+                        targetBtn.classList.add('active-key');
+                        setTimeout(() => targetBtn.classList.remove('active-key'), 120);
+                    }
+                }
+            });
+
+            // Initial view update
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
